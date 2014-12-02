@@ -1,0 +1,103 @@
+<html>
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.27/angular.min.js"></script>
+    <script>
+    angular.module( "myApp", [] )
+      .factory( "Directory", function() {
+        function Directory(attributes){
+          this.name = attributes['name'] || null;
+        }
+
+        Directory.prototype.setName = function(value) {
+          this.name = value;
+        };        
+
+        Directory.prototype.toString = function() {
+          return "Directory[name=" + this.name + "]";
+        };      
+
+        return Directory; 
+      })
+
+      .factory( "User", function() {
+        function User(attributes){
+          var name = attributes['name'] || null;
+
+          this.setName = function(value) {
+            name = value;
+          };
+
+          this.getName = function() {
+            return name;
+          };
+        }
+
+        User.prototype.toString = function() {
+          return "User[name=" + this.getName() + "]";
+        };        
+
+        return User; 
+      })  
+
+      .service( "currentUserService", function( $rootScope, User ) {
+        var user = null;
+
+        this.get = function() {
+          return user;
+        };
+
+        this.set = function(value) {
+          user = value;
+          console.log( "currentUserService.set() - User has been set to " + user );
+          $rootScope.$broadcast('currentUserService::updated');
+        }
+      })  
+
+      .service( "currentDirectoryService", function( $rootScope, Directory ) {
+        var directory = null;
+
+        this.get = function() {
+          return directory;
+        };
+
+        this.set = function(value) {
+          directory = value;
+          console.log( "currentDirectoryService.set() - Directory has been set to " + directory );
+          $rootScope.$broadcast('currentDirectoryService::updated');
+        }    
+      })   
+
+      .controller( "MyController", function( $scope, $rootScope, User, currentUserService, Directory, currentDirectoryService ) {
+        $scope.currentUserService = currentUserService;
+        $scope.currentDirectoryService = currentDirectoryService;
+
+        $scope.currentUser = null;
+        $scope.currentDirectory = null;
+
+        $scope.init = function () {
+          console.log( "Initializing MyController..." );
+          currentUserService.set( new User({name: 'Lando Calrissian'}) );
+          currentDirectoryService.set( new Directory({name: '/home/lando'}) );
+        }
+
+        $scope.$on('currentUserService::updated', function(event) {
+          console.log( "Handing a currentUserService::updated event..." );
+          $scope.currentUser = $scope.currentUserService.get();
+        });
+
+        $scope.$on('currentDirectoryService::updated', function(event) {
+          console.log( "Handing a currentDirectoryService::updated event..." );
+          $scope.currentDirectory = $scope.currentDirectoryService.get();
+        });    
+
+        $scope.init();
+      });
+    </script>
+  </head>
+  <body>
+    <div ng-app="myApp" ng-controller='MyController'>
+      <pre>currentUser = {{currentUser}}</pre>
+      <pre>currentDirectory = {{currentDirectory}}</pre>
+    </div>
+  </body>
+</html>
